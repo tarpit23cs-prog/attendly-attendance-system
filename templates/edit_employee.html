@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Edit Employee - Attendly{% endblock %}
+
+{% block content %}
+<h4 class="page-title">Edit Employee</h4>
+
+<div class="card" style="max-width: 550px;">
+    <div class="card-body">
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label">Employee ID</label>
+                <input type="text" name="employee_id" class="form-control" value="{{ emp.employee_id }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Name</label>
+                <input type="text" name="name" class="form-control" value="{{ emp.name }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Email</label>
+                <input type="email" name="email" class="form-control" value="{{ emp.email }}" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">New Password (leave blank to keep current)</label>
+                <input type="password" name="password" class="form-control" placeholder="********">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Department</label>
+                <select name="department" class="form-select" required>
+                    {% for d in ['Development', 'HR', 'Finance', 'Sales', 'Support', 'Marketing'] %}
+                        <option value="{{ d }}" {% if emp.department == d %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Role</label>
+                <select name="role" class="form-select" required>
+                    <option value="employee" {% if emp.role == 'employee' %}selected{% endif %}>Employee</option>
+                    <option value="admin" {% if emp.role == 'admin' %}selected{% endif %}>Admin</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-navy">Update Employee</button>
+            <a href="{{ url_for('employees') }}" class="btn btn-outline-secondary">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

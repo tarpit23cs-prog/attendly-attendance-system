@@ -1,0 +1,7 @@
+Flask==3.0.3
+mysql-connector-python==8.4.0
+python-dotenv==1.0.1
+pandas==2.2.2
+numpy==1.26.4
+Werkzeug==3.0.3
+reportlab==4.2.2

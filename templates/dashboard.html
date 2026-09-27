@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Dashboard - Attendly{% endblock %}
+
+{% block content %}
+
+{% if session.get('role') == 'admin' %}
+    <!-- ============ ADMIN DASHBOARD ============ -->
+    <h4 class="page-title">Attendance Dashboard</h4>
+    <p class="text-muted">{{ today_display }}</p>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">Total Employees</div>
+                <div class="stat-value">{{ total_employees }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">Present Today</div>
+                <div class="stat-value text-success">{{ present_today }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">Absent Today</div>
+                <div class="stat-value text-danger">{{ absent_today }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <div class="stat-label">Late Today</div>
+                <div class="stat-value text-warning">{{ late_today }}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Today's Attendance</div>
+        <div class="card-body p-0">
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Employee ID</th>
+                        <th>Name</th>
+                        <th>Department</th>
+                        <th>Status</th>
+                        <th>Login</th>
+                        <th>Logout</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in today_attendance %}
+                    <tr>
+                        <td>{{ row.employee_id }}</td>
+                        <td>{{ row.name }}</td>
+                        <td>{{ row.department }}</td>
+                        <td>
+                            {% if row.status == 'Present' %}
+                                <span class="badge bg-success">Present</span>
+                            {% elif row.status == 'Late' %}
+                                <span class="badge bg-warning text-dark">Late</span>
+                            {% else %}
+                                <span class="badge bg-danger">Absent</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ row.login_time or '--' }}</td>
+                        <td>{{ row.logout_time or '--' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+{% else %}
+    <!-- ============ EMPLOYEE DASHBOARD ============ -->
+    <h4 class="page-title">Welcome, {{ employee.name }}</h4>
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">Today's Attendance</div>
+                <div class="card-body">
+                    {% if today_record %}
+                        <p class="mb-2">
+                            Status:
+                            {% if today_record.status == 'Present' %}
+                                <span class="badge bg-success">Present</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Late</span>
+                            {% endif %}
+                        </p>
+                        <p class="mb-2">Login: <strong>{{ today_record.login_time }}</strong></p>
+                        {% if today_record.logout_time %}
+                            <p class="mb-2">Logout: <strong>{{ today_record.logout_time }}</strong></p>
+                            <p class="mb-3">Working Hours: <strong>{{ today_record.working_hours }}</strong></p>
+                            <span class="text-muted">You have completed today's attendance.</span>
+                        {% else %}
+                            <p class="mb-3">Logout: <strong>--</strong></p>
+                            <form method="POST" action="{{ url_for('clock_out') }}">
+                                <button type="submit" class="btn btn-navy">
+                                    <i class="bi bi-box-arrow-right"></i> Clock Out
+                                </button>
+                            </form>
+                        {% endif %}
+                    {% else %}
+                        <p class="mb-3">Status: <span class="badge bg-secondary">Not Marked</span></p>
+                        <form method="POST" action="{{ url_for('clock_in') }}">
+                            <button type="submit" class="btn btn-navy">
+                                <i class="bi bi-box-arrow-in-right"></i> Clock In
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">My Attendance Summary</div>
+                <div class="card-body">
+                    <p class="mb-2">Total Present Days: <strong>{{ stats.present_days }}</strong></p>
+                    <p class="mb-2">Total Late Days: <strong>{{ stats.late_days }}</strong></p>
+                    <p class="mb-0">Attendance Percentage: <strong>{{ stats.attendance_pct }}%</strong></p>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+{% endblock %}

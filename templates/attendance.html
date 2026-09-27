@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Attendance - Attendly{% endblock %}
+
+{% block content %}
+<h4 class="page-title">Attendance</h4>
+
+<!-- Filters (simple GET form) -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Date</label>
+                <input type="date" name="date" class="form-control" value="{{ selected_date }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Department</label>
+                <select name="department" class="form-select">
+                    <option value="">All</option>
+                    {% for d in departments %}
+                        <option value="{{ d }}" {% if selected_department == d %}selected{% endif %}>{{ d }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="Present" {% if selected_status == 'Present' %}selected{% endif %}>Present</option>
+                    <option value="Late" {% if selected_status == 'Late' %}selected{% endif %}>Late</option>
+                    <option value="Absent" {% if selected_status == 'Absent' %}selected{% endif %}>Absent</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-navy w-100">
+                    <i class="bi bi-funnel"></i> Filter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Attendance for {{ selected_date }}</div>
+    <div class="card-body p-0">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                    <th>Login</th>
+                    <th>Logout</th>
+                    <th>Working Hours</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in records %}
+                <tr>
+                    <td>{{ row.employee_id }}</td>
+                    <td>{{ row.name }}</td>
+                    <td>{{ row.department }}</td>
+                    <td>
+                        {% if row.status == 'Present' %}
+                            <span class="badge bg-success">Present</span>
+                        {% elif row.status == 'Late' %}
+                            <span class="badge bg-warning text-dark">Late</span>
+                        {% else %}
+                            <span class="badge bg-danger">Absent</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ row.login_time or '--' }}</td>
+                    <td>{{ row.logout_time or '--' }}</td>
+                    <td>{{ row.working_hours or '--' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

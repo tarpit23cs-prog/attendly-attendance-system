@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}My Attendance - Attendly{% endblock %}
+
+{% block content %}
+<h4 class="page-title">My Attendance History</h4>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Login</th>
+                    <th>Logout</th>
+                    <th>Working Hours</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in records %}
+                <tr>
+                    <td>{{ row.date }}</td>
+                    <td>
+                        {% if row.status == 'Present' %}
+                            <span class="badge bg-success">Present</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Late</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ row.login_time or '--' }}</td>
+                    <td>{{ row.logout_time or '--' }}</td>
+                    <td>{{ row.working_hours or '--' }}</td>
+                </tr>
+                {% endfor %}
+                {% if not records %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted">No attendance records yet.</td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

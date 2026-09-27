@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% block title %}Reports - Attendly{% endblock %}
+
+{% block content %}
+<h4 class="page-title">Attendance Report</h4>
+
+<!-- Filter form: Daily / Monthly / Yearly -->
+<div class="card mb-3">
+    <div class="card-body">
+        <form method="GET" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Report Type</label>
+                <select name="period" class="form-select">
+                    <option value="daily" {% if period == 'daily' %}selected{% endif %}>Daily</option>
+                    <option value="monthly" {% if period == 'monthly' %}selected{% endif %}>Monthly</option>
+                    <option value="yearly" {% if period == 'yearly' %}selected{% endif %}>Yearly</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Date (for Daily)</label>
+                <input type="date" name="date" class="form-control" value="{{ selected_date }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Month (for Monthly)</label>
+                <input type="month" name="month" class="form-control" value="{{ selected_month }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Year (for Yearly)</label>
+                <input type="number" name="year" class="form-control" value="{{ selected_year }}">
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-navy w-100">Go</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<p class="text-muted">Showing report for: <strong>{{ label }}</strong> ({{ summary.working_days }} working day(s))</p>
+
+<!-- Summary cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-label">Total Employees</div>
+            <div class="stat-value">{{ summary.total_employees }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-label">Present</div>
+            <div class="stat-value text-success">{{ summary.present }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-label">Absent</div>
+            <div class="stat-value text-danger">{{ summary.absent }}</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="stat-card">
+            <div class="stat-label">Attendance Rate</div>
+            <div class="stat-value text-navy">{{ summary.attendance_rate }}%</div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header">Present vs Absent vs Late</div>
+            <div class="card-body"><canvas id="statusPieChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header">Monthly Attendance Trend</div>
+            <div class="card-body"><canvas id="trendLineChart"></canvas></div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-header">Department Attendance</div>
+            <div class="card-body"><canvas id="deptBarChart"></canvas></div>
+        </div>
+    </div>
+</div>
+
+{% if selected_employee %}
+<div class="card mb-4">
+    <div class="card-header">Employee Report - {{ selected_employee.name }}</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3"><p class="mb-1 text-muted">Employee ID</p><p><strong>{{ selected_employee.employee_id }}</strong></p></div>
+            <div class="col-md-3"><p class="mb-1 text-muted">Department</p><p><strong>{{ selected_employee.department }}</strong></p></div>
+            <div class="col-md-3"><p class="mb-1 text-muted">Attendance %</p><p><strong>{{ selected_employee.attendance_pct }}%</strong></p></div>
+            <div class="col-md-3"><p class="mb-1 text-muted">Avg. Working Hours</p><p><strong>{{ selected_employee.avg_working_hours }}</strong></p></div>
+        </div>
+        <div class="row">
+            <div class="col-md-3"><p class="mb-1 text-muted">Present Days</p><p><strong>{{ selected_employee.present }}</strong></p></div>
+            <div class="col-md-3"><p class="mb-1 text-muted">Late Days</p><p><strong>{{ selected_employee.late }}</strong></p></div>
+            <div class="col-md-3"><p class="mb-1 text-muted">Absent Days</p><p><strong>{{ selected_employee.absent }}</strong></p></div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Employee-wise table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Employee-wise Summary</span>
+        <div>
+            <a href="{{ url_for('export_csv') }}?{{ query_string }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
+            </a>
+            <a href="{{ url_for('export_pdf') }}?{{ query_string }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-file-earmark-pdf"></i> Export PDF
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Employee ID</th>
+                    <th>Name</th>
+                    <th>Department</th>
+                    <th>Present</th>
+                    <th>Late</th>
+                    <th>Absent</th>
+                    <th>Attendance %</th>
+                    <th>Avg. Working Hours</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in employees %}
+                <tr>
+                    <td>{{ emp.employee_id }}</td>
+                    <td>{{ emp.name }}</td>
+                    <td>{{ emp.department }}</td>
+                    <td>{{ emp.present }}</td>
+                    <td>{{ emp.late }}</td>
+                    <td>{{ emp.absent }}</td>
+                    <td>{{ emp.attendance_pct }}%</td>
+                    <td>{{ emp.avg_working_hours }}</td>
+                    <td>
+                        <a href="?{{ query_string }}&employee_id={{ emp.employee_id }}" class="btn btn-sm btn-outline-secondary">View</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+    // Chart data is generated by Flask/Python - not hardcoded here.
+    const statusCtx = document.getElementById('statusPieChart');
+    new Chart(statusCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Present', 'Absent', 'Late'],
+            datasets: [{
+                data: [{{ summary.present }}, {{ summary.absent }}, {{ summary.late }}],
+                backgroundColor: ['#16a34a', '#dc2626', '#f59e0b']
+            }]
+        },
+        options: { plugins: { legend: { position: 'bottom' } } }
+    });
+
+    const trendCtx = document.getElementById('trendLineChart');
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: {{ trend_labels | tojson }},
+            datasets: [{
+                label: 'Attendance Rate %',
+                data: {{ trend_rates | tojson }},
+                borderColor: '#16233d',
+                backgroundColor: 'rgba(22, 35, 61, 0.1)',
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: { scales: { y: { beginAtZero: true, max: 100 } } }
+    });
+
+    const deptCtx = document.getElementById('deptBarChart');
+    new Chart(deptCtx, {
+        type: 'bar',
+        data: {
+            labels: {{ department_labels | tojson }},
+            datasets: [{
+                label: 'Attendance %',
+                data: {{ department_rates | tojson }},
+                backgroundColor: '#a68a56'
+            }]
+        },
+        options: { scales: { y: { beginAtZero: true, max: 100 } } }
+    });
+</script>
+{% endblock %}
